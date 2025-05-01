@@ -1,0 +1,5 @@
+scramble,solver,moves,solved,time
+1,BFS,2,True,9.7112
+1,A*,2,True,10.4438
+1,CFOP,0,True,0.0139
+1,RL,2,True,0.009
