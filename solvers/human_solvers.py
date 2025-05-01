@@ -59,18 +59,15 @@ def beginner_solver(cube: RubiksCube):
         moves.extend(alg)
 
 def cfop_solver(cube_wrapper: RubiksCube):
-    scramble = cube_wrapper.get_scramble_sequence()
+    # Use the existing scrambled cube
+    if not isinstance(cube_wrapper.cube, PyCube):
+        raise ValueError("cube_wrapper.cube must be a PyCube instance")
 
-    # Create fresh PyCuber cube and apply scramble
-    pycube = PyCube()
-    pycube(Formula(scramble))
-
-    # Solve using PyCuber's CFOP solver
-    solver = CFOPSolver(pycube)
+    solver = CFOPSolver(cube_wrapper.cube.copy())  # Copy to avoid modifying during solve
     solution = solver.solve()
 
     moves = [str(move) for move in solution]
-    cube_wrapper.cube = pycube.copy()
+    cube_wrapper.apply_moves(moves)  # Apply to the actual cube
     return moves
 
 # Full state-based Roux method phases (simplified representative logic)

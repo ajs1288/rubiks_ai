@@ -1,7 +1,8 @@
 import numpy as np
 import csv
 from stable_baselines3 import DQN
-from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
+from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv, VecMonitor
 from stable_baselines3.common.callbacks import EvalCallback, BaseCallback
 from rl.cube_env import CubeEnv
 
@@ -35,9 +36,9 @@ def make_env(scramble_length, seed=None):
 
 # Curriculum stages: gradually increase scramble length
 curriculum = [
-    {"scramble_length": 1, "timesteps": 500_000},
-    {"scramble_length": 2, "timesteps": 600_000},
-    {"scramble_length": 3, "timesteps": 750_000},
+    {"scramble_length": 1, "timesteps": 750_000},
+    {"scramble_length": 2, "timesteps": 1_000_000},
+    {"scramble_length": 3, "timesteps": 1_250_000},
 ]
 
 MODEL_PATH = "models/dqn_cube.zip"
@@ -50,8 +51,8 @@ def run_curriculum_training():
         timesteps = stage["timesteps"]
         print(f"\n=== Stage {i+1}: scramble_length={scramble_length}, timesteps={timesteps} ===")
 
-        env = SubprocVecEnv([make_env(scramble_length, seed=j) for j in range(8)])
-        eval_env = DummyVecEnv([make_env(scramble_length)])
+        env = VecMonitor(SubprocVecEnv([make_env(scramble_length, seed=j) for j in range(8)]))
+        eval_env = VecMonitor(DummyVecEnv([make_env(scramble_length)]))
 
         eval_callback = EvalCallback(
             eval_env,

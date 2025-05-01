@@ -220,16 +220,19 @@ def test_beginner_solver():
     print("Beginner is hardcoded and meant to fail")
     # assert cube.is_solved(), "Beginner solver should solve the cube"
 
-
 def test_cfop_solver():
     print("\nRunning CFOP solver test...")
-    from solvers.human_solvers import cfop_solver
     cube = RubiksCube()
     scramble = cube.scramble(length=3)
     print("Scramble:", scramble)
+    print("Before solving:", cube.get_state())
+
+    from solvers.human_solvers import cfop_solver
     moves = cfop_solver(cube)
     print("Moves:", moves)
+    print("After solving:", cube.get_state())
     assert cube.is_solved(), "CFOP solver should solve the cube"
+
 
 
 def test_roux_solver():
@@ -248,7 +251,7 @@ if __name__ == "__main__":
     run_base_tests()
     #run_bfs_tests()
     #run_astar_tests()
-    test_dqn_agent()
+    #test_dqn_agent()
     #test_beginner_solver()
     test_cfop_solver()
-    test_roux_solver()
+    #test_roux_solver()

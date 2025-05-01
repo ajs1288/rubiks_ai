@@ -41,7 +41,7 @@ def cube_to_obs(cube):
                 flat.append(COLOR_MAP[color_char])
     return np.array(flat, dtype=np.uint8)
 
-def evaluate_all(num_scrambles=1, scramble_length=2):
+def evaluate_all(num_scrambles=10, scramble_length=3):
     model = DQN.load(MODEL_PATH)
     results = []
 
