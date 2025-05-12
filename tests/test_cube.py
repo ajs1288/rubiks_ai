@@ -233,8 +233,6 @@ def test_cfop_solver():
     print("After solving:", cube.get_state())
     assert cube.is_solved(), "CFOP solver should solve the cube"
 
-
-
 def test_roux_solver():
     print("\nRunning Roux solver test...")
     cube = RubiksCube()
@@ -247,11 +245,52 @@ def test_roux_solver():
     print("Roux is hardcoded and meant to fail")
     # assert cube.is_solved(), "Roux solver should solve the cube"
     
+def test_imitation_agent(scramble_length=1, max_steps=100):
+    print("\nRunning Imitation agent test...")
+
+    import torch
+    import torch.nn as nn
+    from eval.evaluator import ImitationPolicy, cube_to_obs, ALL_MOVES
+
+    cube = RubiksCube()
+    scramble = cube.scramble(length=scramble_length)
+    print("Scramble:", scramble)
+    print("Before solving:", cube.get_state())
+
+    # Load the trained imitation model
+    model = ImitationPolicy()
+    model.load_state_dict(torch.load("models/imitation_policy.pth"))
+    model.eval()
+
+    obs = cube_to_obs(cube)
+    steps = 0
+    moves = []
+
+    while not cube.is_solved() and steps < max_steps:
+        input_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
+        with torch.no_grad():
+            logits = model(input_tensor)
+            action = torch.argmax(logits, dim=1).item()
+
+        move = ALL_MOVES[action]
+        cube.apply_move(move)
+        moves.append(move)
+        obs = cube_to_obs(cube)
+        steps += 1
+
+    print("Moves taken:", moves)
+    print("After solving:", cube.get_state())
+    if cube.is_solved():
+        print(f"✅ Imitation agent solved the cube in {steps} steps.")
+    else:
+        print("❌ Imitation agent failed to solve the cube.")
+
 if __name__ == "__main__":
     run_base_tests()
     #run_bfs_tests()
     #run_astar_tests()
     #test_dqn_agent()
     #test_beginner_solver()
-    test_cfop_solver()
+    #test_cfop_solver()
     #test_roux_solver()
+    test_imitation_agent()

@@ -21,7 +21,7 @@ COLOR_MAP = {
 }
 
 class CubeEnv(Env):
-    def __init__(self, scramble_length=10, max_steps=100):
+    def __init__(self, scramble_length=10, max_steps=200):
         super().__init__()
         self.scramble_length = scramble_length
         self.max_steps = max_steps
@@ -30,16 +30,20 @@ class CubeEnv(Env):
         self.cube = None
         self.scramble_seq = []
         self.steps_taken = 0
+        self.prev_distance = None
 
     def reset(self, *, seed=None, options=None):
         if seed is not None:
             self.seed(seed)
         self.cube = RubiksCube()
         self.scramble_seq = self.cube.scramble(self.scramble_length)
+        self.cube.apply_moves(self.scramble_seq[::-1])
         self.steps_taken = 0
+        self.prev_distance = self.cube.distance_to_solved()
         obs = self._get_obs()
-        info = {}  # you can later include scramble sequence or step count here
+        info = {} 
         return self._get_obs(), {"scramble": self.scramble_seq}
+
 
     def step(self, action):
         move = ALL_MOVES[action]
@@ -50,10 +54,17 @@ class CubeEnv(Env):
         terminated = self.cube.is_solved()
         truncated = self.steps_taken >= self.max_steps
         distance = self.cube.distance_to_solved()
-        if terminated:
-            reward = 100 + (self.max_steps - self.steps_taken)  # early bonus
+        if self.prev_distance is not None:
+            delta = self.prev_distance - distance  # + if getting closer, - if worse
+            reward = delta
         else:
-            reward = 1.0 - (distance / 54.0)
+            reward -= 0.01
+
+        self.prev_distance = distance
+
+        # Bonus reward if solved
+        if terminated:
+            reward += 100 + (self.max_steps - self.steps_taken)
             
         info = {
             "distance_to_solved": distance,

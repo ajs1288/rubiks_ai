@@ -1,10 +1,13 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import numpy as np
 import csv
 from stable_baselines3 import DQN
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv, VecMonitor
-from stable_baselines3.common.callbacks import EvalCallback, BaseCallback
-from rl.cube_env import CubeEnv
+from stable_baselines3.common.callbacks import EvalCallback, BaseCallback, CheckpointCallback
+from cube_env import CubeEnv
 
 class RewardLoggerCallback(BaseCallback):
     def __init__(self, log_path="logs/rewards.csv", verbose=0):
@@ -36,12 +39,19 @@ def make_env(scramble_length, seed=None):
 
 # Curriculum stages: gradually increase scramble length
 curriculum = [
-    {"scramble_length": 1, "timesteps": 750_000},
-    {"scramble_length": 2, "timesteps": 1_000_000},
-    {"scramble_length": 3, "timesteps": 1_250_000},
+    {"scramble_length": 1, "timesteps": 500_000},
+    {"scramble_length": 2, "timesteps": 500_000},
+    {"scramble_length": 3, "timesteps": 500_000},
+    {"scramble_length": 4, "timesteps": 500_000},
+    {"scramble_length": 5, "timesteps": 500_000},
+    {"scramble_length": 6, "timesteps": 500_000},
+    {"scramble_length": 7, "timesteps": 500_000},
+    {"scramble_length": 8, "timesteps": 500_000},
+    {"scramble_length": 9, "timesteps": 500_000},
+    {"scramble_length": 10, "timesteps": 500_000}
 ]
 
-MODEL_PATH = "models/dqn_cube.zip"
+MODEL_PATH = "hybrid_models/dqn_cube"
 
 def run_curriculum_training():
     model = None
@@ -51,33 +61,38 @@ def run_curriculum_training():
         timesteps = stage["timesteps"]
         print(f"\n=== Stage {i+1}: scramble_length={scramble_length}, timesteps={timesteps} ===")
 
-        env = VecMonitor(SubprocVecEnv([make_env(scramble_length, seed=j) for j in range(8)]))
+        env = VecMonitor(SubprocVecEnv([make_env(scramble_length, seed=j) for j in range(4)]))
         eval_env = VecMonitor(DummyVecEnv([make_env(scramble_length)]))
 
         eval_callback = EvalCallback(
             eval_env,
-            best_model_save_path=f"./models/best_model_stage_{i+1}",
+            best_model_save_path=f"./models/hybrid_best_model_stage_{i+1}",
             log_path="./logs/",
             eval_freq=10000,
             deterministic=True,
             render=False,
         )
         reward_logger = RewardLoggerCallback(log_path=f"logs/rewards_stage_{i+1}.csv")
+        # checkpoint_callback = CheckpointCallback(
+        #     save_freq=100000,
+        #     save_path=f"./models/checkpoints/stage_{i+1}",
+        #     name_prefix="dqn_cube"
+        # )
         if model is None:
             model = DQN(
                 policy="MlpPolicy",
                 env=env,
                 verbose=1,
                 tensorboard_log="./logs/tb/",
-                learning_rate=1e-3,
-                buffer_size=50000,
+                learning_rate=5e-4,
+                buffer_size=100000,
                 learning_starts=1000,
-                batch_size=128,
+                batch_size=256,
                 tau=1.0,
                 gamma=0.99,
                 train_freq=4,
                 target_update_interval=1000,
-                exploration_fraction=0.1,
+                exploration_fraction=0.2,
                 exploration_final_eps=0.05,
             )
         else:
