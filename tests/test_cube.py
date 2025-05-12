@@ -285,6 +285,41 @@ def test_imitation_agent(scramble_length=1, max_steps=100):
     else:
         print("❌ Imitation agent failed to solve the cube.")
 
+def test_hybrid_agent(scramble_length=1, max_steps=200):
+    print("\nRunning Hybrid Agent test...")
+
+    from rl.cube_env import CubeEnv
+    from stable_baselines3 import DQN
+    import torch
+    from rl.cube_env import ALL_MOVES
+
+    # Load the trained hybrid agent model (RL + Imitation)
+    model = DQN.load("models/hybrid_dqn_cube.zip")  # Replace with your trained hybrid model
+    env = CubeEnv(scramble_length=scramble_length, max_steps=max_steps)
+
+    obs, info = env.reset()
+    print("Initial scrambled state:")
+    env.render()
+
+    steps = 0
+    terminated = False
+    truncated = False
+
+    # Run the agent to solve the cube
+    while not (terminated or truncated) and steps < max_steps:
+        action, _ = model.predict(obs, deterministic=True)  # Hybrid model should handle both RL and imitation
+        obs, reward, terminated, truncated, info = env.step(action)
+        steps += 1
+
+    print("\nFinal state after agent ran:")
+    env.render()
+
+    if terminated:
+        print(f"Hybrid agent solved the cube in {steps} steps.")
+    else:
+        print(f"Hybrid agent failed to solve the cube in {steps} steps.")
+
+
 if __name__ == "__main__":
     run_base_tests()
     #run_bfs_tests()
@@ -293,4 +328,5 @@ if __name__ == "__main__":
     #test_beginner_solver()
     #test_cfop_solver()
     #test_roux_solver()
-    test_imitation_agent()
+    #test_imitation_agent()
+    test_hybrid_agent()

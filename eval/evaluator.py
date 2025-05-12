@@ -15,6 +15,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+MODEL_PATH = "models/dqn_cube"
 HYBRID_MODEL_PATH = "models/hybrid_dqn_cube"
 
 internal_solvers = {"CFOP", "Roux", "RL", "Hybrid-RL"}
@@ -111,11 +112,11 @@ def evaluate_all(num_scrambles=10, scramble_length=3):
 
         print(f"Scramble {i+1}: {scramble_seq}")
         solvers = [
-            #("BFS", bfs_solver),
-            #("A*", astar_solver),
             ("CFOP", cfop_solver),
             ("RL", lambda c: rl_solver(c, model, max_steps=200)),
             ("Hybrid-RL", lambda c: hybrid_rl_solver(c, hybrid_model, max_steps=200)),
+            ("BFS", bfs_solver),
+            ("A*", astar_solver),
             #("Imitation", imitation_solver),
             #("Beginner", beginner_solver),
             #("Roux", roux_solver),

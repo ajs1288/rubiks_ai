@@ -7,7 +7,7 @@ from stable_baselines3 import DQN
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv, VecMonitor
 from stable_baselines3.common.callbacks import EvalCallback, BaseCallback, CheckpointCallback
-from cube_env import CubeEnv
+from rl.cube_env import CubeEnv
 
 class RewardLoggerCallback(BaseCallback):
     def __init__(self, log_path="logs/rewards.csv", verbose=0):
